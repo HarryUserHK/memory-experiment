@@ -1,0 +1,548 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Memory Experiment</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: Arial, sans-serif;
+    background: #f1f4f9;
+    color: #202b3c;
+    margin: 0;
+    padding: 24px 14px;
+  }
+  .container {
+    max-width: 850px;
+    margin: auto;
+    background: white;
+    padding: 28px;
+    border-radius: 16px;
+    box-shadow: 0 5px 22px #182b4512;
+  }
+  h1, h2 { color: #183b65; }
+  h1 { margin-top: 0; }
+  .muted { color: #65738a; }
+  .stage { display: none; }
+  .stage.active { display: block; }
+  .timer {
+    background: #eaf1fc;
+    color: #183b65;
+    padding: 13px;
+    border-radius: 10px;
+    font-size: 20px;
+    font-weight: bold;
+    text-align: center;
+    margin: 18px 0;
+  }
+  .question {
+    padding: 15px;
+    border: 1px solid #e1e7ef;
+    border-radius: 10px;
+    margin: 13px 0;
+  }
+  .question p { margin-top: 0; font-weight: bold; }
+  input[type="text"], input[type="number"], select {
+    width: 100%;
+    padding: 11px;
+    border: 1px solid #bdc8d8;
+    border-radius: 7px;
+    font-size: 16px;
+    margin-top: 7px;
+  }
+  label.option {
+    display: block;
+    padding: 7px 0;
+    font-weight: normal;
+    cursor: pointer;
+  }
+  button {
+    background: #1d5fa7;
+    color: white;
+    border: 0;
+    border-radius: 8px;
+    padding: 12px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 14px;
+  }
+  button:hover { background: #174b85; }
+  button:disabled { background: #8b9aab; cursor: not-allowed; }
+  .notice {
+    background: #fff7df;
+    border-left: 4px solid #e4ae32;
+    padding: 12px;
+    border-radius: 6px;
+    margin: 15px 0;
+  }
+  .score-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    margin: 18px 0;
+  }
+  .score-card {
+    background: #f0f5fc;
+    padding: 17px;
+    border-radius: 10px;
+    text-align: center;
+  }
+  .score-card strong {
+    display: block;
+    font-size: 27px;
+    color: #1d5fa7;
+    margin-bottom: 5px;
+  }
+  .review {
+    border: 1px solid #e1e7ef;
+    border-radius: 9px;
+    padding: 13px;
+    margin: 10px 0;
+  }
+  .correct { border-left: 5px solid #23834b; }
+  .incorrect { border-left: 5px solid #c34c4c; }
+  .result-label { font-weight: bold; }
+  .good { color: #23834b; }
+  .bad { color: #bd4141; }
+  .progress {
+    height: 9px;
+    background: #e5eaf1;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+  .progress span {
+    display: block;
+    height: 100%;
+    background: #2876bd;
+  }
+  @media(max-width: 550px) {
+    .container { padding: 19px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <section id="setup" class="stage active">
+    <h1>Memory Experiment</h1>
+    <p class="muted">A study of memory, recall and recognition.</p>
+
+    <div class="question">
+      <p>Choose your experiment version:</p>
+      <label class="option">
+        <input type="radio" name="version" value="A" checked>
+        Version A
+      </label>
+      <label class="option">
+        <input type="radio" name="version" value="B">
+        Version B
+      </label>
+    </div>
+
+    <div class="notice">
+      You will study some information, complete a maths distraction task,
+      and then answer questions about what you remember.
+    </div>
+
+    <p><strong>Important:</strong> Complete the experiment without looking back
+    at earlier stages. Your results will be shown at the end.</p>
+
+    <button onclick="startStudy()">Start experiment</button>
+  </section>
+
+  <section id="study" class="stage">
+    <h1>Stage 1 – Study</h1>
+    <p>Read and remember the following information. You have two minutes.</p>
+    <div class="timer" id="studyTimer">02:00</div>
+
+    <div class="question">
+      <h2>School Sports Day</h2>
+      <p><strong>Event:</strong> School Sports Day</p>
+      <p><strong>Date:</strong> Friday 7 June</p>
+      <p><strong>Location:</strong> Greenfield Oval</p>
+      <p><strong>Start time:</strong> 9:30 am</p>
+      <p><strong>Teams:</strong> Red, Blue, Green and Yellow</p>
+      <p><strong>Relay winner:</strong> Blue</p>
+      <p><strong>Tug-of-war winner:</strong> Green</p>
+      <p><strong>Lunch:</strong> Sandwiches and apples</p>
+      <p><strong>Weather:</strong> Sunny and warm</p>
+      <p><strong>Principal:</strong> Mr Taylor</p>
+      <p><strong>Student prize:</strong> Certificate</p>
+    </div>
+
+    <p class="muted">The next stage will begin automatically when the timer ends.</p>
+  </section>
+
+  <section id="maths" class="stage">
+    <h1>Stage 2 – Distraction Task</h1>
+    <p>Answer as many maths questions as you can in two minutes.</p>
+    <div class="timer" id="mathTimer">02:00</div>
+    <div id="mathQuestions"></div>
+    <p class="muted">Your answers will be marked automatically when the timer ends.</p>
+  </section>
+
+  <section id="memory" class="stage">
+    <h1>Stage 3 – Memory Test</h1>
+    <p>Answer the questions using what you remember from Stage 1.</p>
+    <div class="notice">
+      There are six free-recall questions and four recognition questions.
+      Try not to guess by looking back at the study information.
+    </div>
+    <div id="memoryQuestions"></div>
+    <button id="submitMemory" onclick="finishExperiment()">Submit memory test</button>
+  </section>
+
+  <section id="results" class="stage">
+    <h1>Your Experiment Results</h1>
+    <p class="muted" id="versionResult"></p>
+
+    <div class="score-grid">
+      <div class="score-card">
+        <strong id="totalScore">0/22</strong>
+        Overall score
+      </div>
+      <div class="score-card">
+        <strong id="mathScore">0/12</strong>
+        Maths
+      </div>
+      <div class="score-card">
+        <strong id="recallScore">0/6</strong>
+        Free recall
+      </div>
+      <div class="score-card">
+        <strong id="recognitionScore">0/4</strong>
+        Recognition
+      </div>
+    </div>
+
+    <h2>Performance comparison</h2>
+    <div id="comparison"></div>
+
+    <h2>Question-by-question review</h2>
+    <p class="muted">Green means correct. Red means incorrect or unanswered.</p>
+
+    <h3>Stage 2 – Maths answers</h3>
+    <div id="mathReview"></div>
+
+    <h3>Stage 3 – Free recall</h3>
+    <div id="recallReview"></div>
+
+    <h3>Stage 3 – Recognition</h3>
+    <div id="recognitionReview"></div>
+
+    <h2>Final summary</h2>
+    <div id="summary" class="notice"></div>
+
+    <button onclick="location.reload()">Start a new attempt</button>
+  </section>
+</div>
+
+<script>
+const mathsQuestions = [
+  { q: "8 + 7", a: "15" },
+  { q: "24 - 9", a: "15" },
+  { q: "6 × 4", a: "24" },
+  { q: "42 ÷ 6", a: "7" },
+  { q: "19 + 13", a: "32" },
+  { q: "50 - 27", a: "23" },
+  { q: "7 × 8", a: "56" },
+  { q: "81 ÷ 9", a: "9" },
+  { q: "36 + 18", a: "54" },
+  { q: "100 - 64", a: "36" },
+  { q: "9 × 5", a: "45" },
+  { q: "72 ÷ 8", a: "9" }
+];
+
+const recallQuestions = {
+  A: [
+    { q: "On what date was School Sports Day held?", answer: "Friday 7 June", keys: ["friday", "7", "june"] },
+    { q: "Where did the event take place?", answer: "Greenfield Oval", keys: ["greenfield", "oval"] },
+    { q: "What time did the event begin?", answer: "9:30 am", keys: ["9:30"] },
+    { q: "Which team won the relay?", answer: "Blue", keys: ["blue"] },
+    { q: "Who won the tug-of-war?", answer: "Green", keys: ["green"] },
+    { q: "What food was provided for lunch?", answer: "Sandwiches and apples", keys: ["sandwich", "apple"] }
+  ],
+  B: [
+    { q: "Give the day and date of the school's sports event.", answer: "Friday 7 June", keys: ["friday", "7", "june"] },
+    { q: "Name the oval where the sports day occurred.", answer: "Greenfield Oval", keys: ["greenfield", "oval"] },
+    { q: "At what time were students expected to start?", answer: "9:30 am", keys: ["9:30"] },
+    { q: "Identify the winning team in the relay race.", answer: "Blue", keys: ["blue"] },
+    { q: "Which colour team won the tug-of-war competition?", answer: "Green", keys: ["green"] },
+    { q: "Name both items supplied for lunch.", answer: "Sandwiches and apples", keys: ["sandwich", "apple"] }
+  ]
+};
+
+const recognitionQuestions = {
+  A: [
+    { q: "Which set shows all four teams?", options: ["Red, Blue, Green and Yellow", "Red, Black, White and Blue", "Green, Orange, Purple and Yellow"], answer: 0, correct: "Red, Blue, Green and Yellow" },
+    { q: "What was the weather like?", options: ["Cold and rainy", "Sunny and warm", "Windy and snowy"], answer: 1, correct: "Sunny and warm" },
+    { q: "Who was the principal?", options: ["Mr Brown", "Mr Taylor", "Mr Wilson"], answer: 1, correct: "Mr Taylor" },
+    { q: "What prize was given to a student?", options: ["A trophy", "A medal", "A certificate"], answer: 2, correct: "A certificate" }
+  ],
+  B: [
+    { q: "Which group of colours appeared as the sports teams?", options: ["Red, Black, White and Blue", "Red, Blue, Green and Yellow", "Green, Orange, Purple and Yellow"], answer: 1, correct: "Red, Blue, Green and Yellow" },
+    { q: "Choose the correct description of the conditions.", options: ["Sunny and warm", "Cold and rainy", "Windy and snowy"], answer: 0, correct: "Sunny and warm" },
+    { q: "Recall the name of the school's principal.", options: ["Mr Wilson", "Mr Brown", "Mr Taylor"], answer: 2, correct: "Mr Taylor" },
+    { q: "Which item was listed as the student prize?", options: ["A medal", "A certificate", "A trophy"], answer: 1, correct: "A certificate" }
+  ]
+};
+
+let selectedVersion = "A";
+let mathsAnswers = [];
+let recallAnswers = [];
+let recognitionAnswers = [];
+let studyInterval = null;
+let mathsInterval = null;
+let finished = false;
+
+function showStage(id) {
+  document.querySelectorAll(".stage").forEach(s => s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  window.scrollTo(0, 0);
+}
+
+function startStudy() {
+  selectedVersion = document.querySelector('input[name="version"]:checked').value;
+  showStage("study");
+  runTimer(120, "studyTimer", startMaths);
+}
+
+function runTimer(seconds, elementId, onComplete) {
+  let remaining = seconds;
+  const element = document.getElementById(elementId);
+
+  function update() {
+    const minutes = Math.floor(remaining / 60);
+    const secs = remaining % 60;
+    element.textContent =
+      String(minutes).padStart(2, "0") + ":" +
+      String(secs).padStart(2, "0");
+
+    if (remaining <= 0) {
+      clearInterval(interval);
+      onComplete();
+    }
+  }
+
+  update();
+  const interval = setInterval(() => {
+    remaining--;
+    update();
+  }, 1000);
+}
+
+function startMaths() {
+  showStage("maths");
+  const holder = document.getElementById("mathQuestions");
+  holder.innerHTML = "";
+
+  mathsQuestions.forEach((item, index) => {
+    holder.innerHTML += `
+      <div class="question">
+        <p>Question ${index + 1}: ${item.q} = ?</p>
+        <input type="number" id="math${index}" placeholder="Your answer">
+      </div>`;
+  });
+
+  runTimer(120, "mathTimer", startMemory);
+}
+
+function collectMathsAnswers() {
+  mathsAnswers = mathsQuestions.map((item, index) => {
+    const field = document.getElementById("math" + index);
+    return field ? field.value.trim() : "";
+  });
+}
+
+function startMemory() {
+  collectMathsAnswers();
+  showStage("memory");
+
+  const holder = document.getElementById("memoryQuestions");
+  holder.innerHTML = "";
+
+  recallQuestions[selectedVersion].forEach((item, index) => {
+    holder.innerHTML += `
+      <div class="question">
+        <p>Recall ${index + 1}: ${item.q}</p>
+        <input type="text" id="recall${index}" placeholder="Type your answer">
+      </div>`;
+  });
+
+  recognitionQuestions[selectedVersion].forEach((item, index) => {
+    let options = item.options.map((option, optionIndex) => `
+      <label class="option">
+        <input type="radio" name="recognition${index}" value="${optionIndex}">
+        ${option}
+      </label>`).join("");
+
+    holder.innerHTML += `
+      <div class="question">
+        <p>Recognition ${index + 1}: ${item.q}</p>
+        ${options}
+      </div>`;
+  });
+}
+
+function normalise(value) {
+  return value.toLowerCase()
+    .replace(/[.,!?]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function finishExperiment() {
+  if (finished) return;
+  finished = true;
+
+  const button = document.getElementById("submitMemory");
+  button.disabled = true;
+
+  collectMathsAnswers();
+
+  recallAnswers = recallQuestions[selectedVersion].map((item, index) => {
+    const field = document.getElementById("recall" + index);
+    return field ? field.value.trim() : "";
+  });
+
+  recognitionAnswers = recognitionQuestions[selectedVersion].map((item, index) => {
+    const selected = document.querySelector(`input[name="recognition${index}"]:checked`);
+    return selected ? Number(selected.value) : null;
+  });
+
+  displayResults();
+  showStage("results");
+}
+
+function displayResults() {
+  const mathsCorrect = mathsQuestions.map((q, i) =>
+    normalise(mathsAnswers[i] || "") === q.a
+  );
+
+  const recallCorrect = recallQuestions[selectedVersion].map((q, i) => {
+    const answer = normalise(recallAnswers[i] || "");
+    return q.keys.every(key => answer.includes(normalise(key)));
+  });
+
+  const recognitionCorrect = recognitionQuestions[selectedVersion].map((q, i) =>
+    recognitionAnswers[i] === q.answer
+  );
+
+  const mathsTotal = mathsCorrect.filter(Boolean).length;
+  const recallTotal = recallCorrect.filter(Boolean).length;
+  const recognitionTotal = recognitionCorrect.filter(Boolean).length;
+  const memoryTotal = recallTotal + recognitionTotal;
+  const overall = mathsTotal + memoryTotal;
+
+  document.getElementById("versionResult").textContent =
+    "You completed Version " + selectedVersion + ".";
+
+  document.getElementById("totalScore").textContent = overall + "/22";
+  document.getElementById("mathScore").textContent = mathsTotal + "/12";
+  document.getElementById("recallScore").textContent = recallTotal + "/6";
+  document.getElementById("recognitionScore").textContent = recognitionTotal + "/4";
+
+  const recallPercent = recallTotal / 6 * 100;
+  const recognitionPercent = recognitionTotal / 4 * 100;
+
+  let comparison = `
+    <p><strong>Free recall:</strong> ${recallTotal}/6 (${Math.round(recallPercent)}%)</p>
+    <div class="progress"><span style="width:${recallPercent}%"></span></div>
+    <p><strong>Recognition:</strong> ${recognitionTotal}/4 (${Math.round(recognitionPercent)}%)</p>
+    <div class="progress"><span style="width:${recognitionPercent}%"></span></div>
+  `;
+
+  if (recallPercent > recognitionPercent) {
+    comparison += "<p class='good'><strong>Your stronger memory section was free recall.</strong> You scored a higher percentage when retrieving information without answer choices.</p>";
+  } else if (recognitionPercent > recallPercent) {
+    comparison += "<p class='good'><strong>Your stronger memory section was recognition.</strong> You scored a higher percentage when choosing from possible answers.</p>";
+  } else {
+    comparison += "<p><strong>Your recall and recognition percentages were equal.</strong></p>";
+  }
+
+  document.getElementById("comparison").innerHTML = comparison;
+
+  document.getElementById("mathReview").innerHTML =
+    mathsQuestions.map((q, i) => reviewCard(
+      "Question " + (i + 1) + ": " + q.q,
+      mathsAnswers[i] || "No answer",
+      q.a,
+      mathsCorrect[i]
+    )).join("");
+
+  document.getElementById("recallReview").innerHTML =
+    recallQuestions[selectedVersion].map((q, i) => reviewCard(
+      "Question " + (i + 1) + ": " + q.q,
+      recallAnswers[i] || "No answer",
+      q.answer,
+      recallCorrect[i]
+    )).join("");
+
+  document.getElementById("recognitionReview").innerHTML =
+    recognitionQuestions[selectedVersion].map((q, i) => {
+      const chosen = recognitionAnswers[i] === null
+        ? "No answer"
+        : q.options[recognitionAnswers[i]];
+      return reviewCard(
+        "Question " + (i + 1) + ": " + q.q,
+        chosen,
+        q.correct,
+        recognitionCorrect[i]
+      );
+    }).join("");
+
+  let strongest = [
+    { name: "Maths", score: mathsTotal / 12 },
+    { name: "Free recall", score: recallTotal / 6 },
+    { name: "Recognition", score: recognitionTotal / 4 }
+  ];
+  strongest.sort((a, b) => b.score - a.score);
+
+  const weakest = [...strongest].sort((a, b) => a.score - b.score)[0];
+
+  let summary = `
+    You scored <strong>${overall}/22 overall</strong>.
+    Your highest percentage was in <strong>${strongest[0].name}</strong>.
+    Your lowest percentage was in <strong>${weakest.name}</strong>.
+  `;
+
+  if (recallPercent !== recognitionPercent) {
+    summary += recallPercent > recognitionPercent
+      ? " You performed better in free recall than recognition."
+      : " You performed better in recognition than free recall.";
+  } else {
+    summary += " You achieved the same percentage in free recall and recognition.";
+  }
+
+  summary += " These results describe how you performed in this particular test; they do not prove which brain systems were used.";
+
+  document.getElementById("summary").innerHTML = summary;
+}
+
+function reviewCard(question, yourAnswer, correctAnswer, isCorrect) {
+  return `
+    <div class="review ${isCorrect ? "correct" : "incorrect"}">
+      <p><strong>${question}</strong></p>
+      <p>Your answer: ${escapeHTML(yourAnswer)}</p>
+      <p>Correct answer: <strong>${escapeHTML(correctAnswer)}</strong></p>
+      <p class="result-label ${isCorrect ? "good" : "bad"}">
+        ${isCorrect ? "Correct" : "Incorrect"}
+      </p>
+    </div>`;
+}
+
+function escapeHTML(value) {
+  return String(value).replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;"
+  })[char]);
+}
+</script>
+</body>
+</html>
